@@ -5,11 +5,20 @@ import '../../node_modules/leaflet/dist/images/marker-shadow.png';
 
 import '../../node_modules/leaflet/dist/leaflet';
 
-const LeafletMap = (mapClassName) => {
+import axios from "axios";
+
+const LeafletMap = async (mapClassName) => {
   let mapContainerEls = document.getElementsByClassName(mapClassName);
 
   for (let containerEl of mapContainerEls) {
-    let mymap = L.map(containerEl).setView([51.505, -0.09], 13);
+    const mapLocationText = containerEl.dataset.map_location;
+    const geocodeUrl = encodeURI('https://api.mapbox.com/geocoding/v5/mapbox.places/'+mapLocationText+'.json?access_token=pk.eyJ1IjoiZGlsbG9uLWRyb25lIiwiYSI6ImNrN3J6ZzlmdzBkdXgzZW5yeGVtYnVqYjkifQ.6px95nykLjyGtFlBdbsZ7w')
+    const res = await axios.get(geocodeUrl);
+    let mapInitCoords = res.data.features[0].geometry.coordinates;
+    //swap lat / lng
+    [mapInitCoords[0], mapInitCoords[1]] = [mapInitCoords[1], mapInitCoords[0]];
+
+    let mymap = L.map(containerEl).setView(mapInitCoords, 13);
 
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
       maxZoom: 18,
@@ -22,6 +31,5 @@ const LeafletMap = (mapClassName) => {
     }).addTo(mymap);
   }
 }
-
 
 export default LeafletMap;
